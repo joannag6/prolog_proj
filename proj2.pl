@@ -3,15 +3,18 @@
 % puzzle_solution(Puzzle).
 
 puzzle_solution(Rows) :-
-  Rows = [FirstRow | OtherRows], % OtherRows is a list of rows, incl header
+  Rows = [FirstRow | OtherRows], % OtherRows is a list of rows, incl headers
   length(OtherRows, Length),
-  set_eq_list(Length, EqualsList),
+  set_eq_list(Length, EqualsList), % makes a list of [#=] to be used in sum()
   transpose(Rows, Columns),
-  Columns = [FirstCol | OtherCols],
-  maplist(separate_list, OtherRows, RowHeaders, RowElems),
-  maplist(separate_list, OtherCols, ColHeaders, ColElems),
-  maplist(sum, RowElems, EqualsList, RowHeaders),
-  maplist(sum, ColElems, EqualsList, ColHeaders).
+  Columns = [FirstCol | OtherCols], % OtherCols is a list of cols, incl headers
+  maplist(separate_list, OtherRows, RowHeaders, RowElems), % RowElems are lists of row elem lists
+  maplist(separate_list, OtherCols, ColHeaders, ColElems), % ColElems are lists of col elem lists
+
+  append(RowElems, Vs), Vs ins 1..9, % ensures all elems are between 1 to 9
+
+  maplist(sum, RowElems, EqualsList, RowHeaders), % ensure the sum of each row add up to the header
+  maplist(sum, ColElems, EqualsList, ColHeaders). % ensure the sum of each col add up to the header
 
 testSum([[0,4,6],[3,1,_],[7,_,4]]).
 
