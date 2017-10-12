@@ -2,7 +2,7 @@
 
 % puzzle_solution(Puzzle).
 
-puzzle_solution(Rows, ColElems, ColHeaders) :-
+puzzle_solution(Rows) :-
   Rows = [_ | OtherRows], % OtherRows is a list of rows, incl headers
   transpose(Rows, Columns),
   Columns = [_ | OtherCols], % OtherCols is a list of cols, incl headers
