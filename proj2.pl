@@ -2,47 +2,66 @@
 
 % puzzle_solution(Puzzle).
 
-puzzle_solution(Rows, RowElems, EqualsList, RowHeaders) :-
-  Rows = [FirstRow | OtherRows], % OtherRows is a list of rows, incl headers
+puzzle_solution(Rows, ColElems, ColHeaders) :-
+  Rows = [_ | OtherRows], % OtherRows is a list of rows, incl headers
   transpose(Rows, Columns),
-  Columns = [FirstCol | OtherCols], % OtherCols is a list of cols, incl headers
+  Columns = [_ | OtherCols], % OtherCols is a list of cols, incl headers
   maplist(separate_list, OtherRows, RowHeaders, RowElems), % RowElems are lists of row elem lists
   maplist(separate_list, OtherCols, ColHeaders, ColElems), % ColElems are lists of col elem lists
 
-  % append(RowElems, Num), Num ins 1..9, % ensures all elems are between 1 to 9
+  append(RowElems, Num), Num ins 1..9, % ensures all elems are between 1 to 9
   maplist(all_distinct, RowElems), % ensure RowElems have distinct values in each row
-  maplist(all_distinct, ColElems). % ensure ColElems have distinct values in each col
+  maplist(all_distinct, ColElems), % ensure ColElems have distinct values in each col
 
-  % (maplist(sum, RowElems, EqualsList, RowHeaders); % ensure the sum of each row add up to the header
-  % maplist(product, RowElems, RowHeaders)),
-  % (maplist(sum, ColElems, EqualsList, ColHeaders); % ensure the sum of each col add up to the header
-  % maplist(product, ColElems, ColHeaders)).
+  maplist(is_sum_or_prod, RowElems, RowHeaders),
+  maplist(is_sum_or_prod, ColElems, ColHeaders),
+
+  length(RowElems, Length),
+  LastIndex is Length - 1,
+  numlist(0, LastIndex, Indices),
+  maplist(nth0, Indices, RowElems, DiagonalList),
+  same_values(DiagonalList).
 
 testSum([[0,4,6],[3,1,_],[7,_,4]]).
 
-
-
-% testPuzzle([[0,14,10,35],[14,_,_,_],[15,_,_,_],[28,_,1,_]]).
-testPuzzle([[0,14,10,35],[14,7,2,1],[15,3,7,5],[28,4,1,7]]).
+testPuzzle([[0,14,10,35],[14,_,_,_],[15,_,_,_],[28,_,1,_]]).
+% testPuzzle([[0,14,10,35],[14,7,2,1],[15,3,7,5],[28,4,1,7]]).
 
 separate_list(Lst, Head, Tail) :-
   Lst = [Head | Tail].
+
+same_values(List) :-
+  List = [First | Tail],
+  Tail = [Second | _],
+  First #= Second,
+  same_values(Tail),!.
+same_values([_]) :- true.
 
 % set_eq_list(Length, EqualsList), % makes a list of [#=] to be used in sum()
 % set_eq_list(Length, EqualsList) :-
 %   length(EqualsList, Length),
 %   maplist(=(#=), EqualsList).
 
+% get_diagonal([[a,b,c],[c,a,b],[b,c,a]])
+
+% get_diagonal(ListOfRows, Index) :-
+%   ListOfRows = [Head | Tail].
+
+% maplist(nth0, 0..Length, ListOfRows, DiagonalList),
+% DiagonalList should be all the same numbers.
+  % nth0(Index, List, Elem)
+
+
 % Recursive function to find product of a list.
 product(List, Product) :-
   List = [Head | Tail],
   product(Tail, NextProduct),
-  Product is Head * NextProduct.
-product([], Product) :-
-  Product = 1.
+  Product #= Head * NextProduct.
+product([Head], Product) :-
+  Product #= Head.
 
 % checks a row/col if they're sum or product.
-is_sum_or_prod(Elem, Header) :- product(Elem, Header),!. % for first check, if true, will check the second one too
+is_sum_or_prod(Elem, Header) :- product(Elem, Header). % added cut to counter backtracking, might run into errors.
 is_sum_or_prod(Elem, Header) :- sum(Elem, #=, Header).
 
 % Rows = [FirstRow | ElemRows], % ElemRows is a list of rows
