@@ -1,16 +1,27 @@
+%  Author     : Joanna Grace Cho Ern Lee
+%  Student ID : 710094
+%  Origin     : Friday, 13 Oct 2017
+%  Purpose    : COMP30020 Declarative Progamming, Project 2
+%
+% The predicate puzzle_solution(Puzzle) aims to provide a valid solution for the
+% inputted puzzle, given the rules in the specification. This is done using the
+% clpfd to define constraints.
+
 :- ensure_loaded(library(clpfd)).
 
-puzzle_solution(Rows) :-
-  Rows = [_ | OtherRows], % OtherRows is a list of rows, incl headers
-  transpose(Rows, Columns),
-  Columns = [_ | OtherCols], % OtherCols is a list of cols, incl headers
-  maplist(separate_list, OtherRows, RowHeaders, RowElems), % RowElems are lists of row elem lists
-  maplist(separate_list, OtherCols, ColHeaders, ColElems), % ColElems are lists of col elem lists
+% Gives a valid solution to the puzzle.
+puzzle_solution(Puzzle) :-
+  % separate out the input into other variables
+  Puzzle = [_ | OtherRows],
+  transpose(Puzzle, Columns),
+  Columns = [_ | OtherCols],
+  maplist(separate_list, OtherRows, RowHeaders, RowElems),
+  maplist(separate_list, OtherCols, ColHeaders, ColElems),
 
-  % ensures all elems are between 1 to 9
-  append(RowElems, Num), Num ins 1..9,
+  % ensures all elems are between 1 to 9 and are ground
+  append(RowElems, Num), Num ins 1..9, label(Num),
 
-  % Ensure Elems have distinct values in each row and column
+  % ensure Elems have distinct values in each row and column
   maplist(all_distinct, RowElems),
   maplist(all_distinct, ColElems),
 
@@ -18,18 +29,18 @@ puzzle_solution(Rows) :-
   maplist(is_sum_or_prod, RowElems, RowHeaders),
   maplist(is_sum_or_prod, ColElems, ColHeaders),
 
+  % ensure all elem on the diagonal are the same value
   length(RowElems, Length),
   LastIndex is Length - 1,
   numlist(0, LastIndex, Indices),
   maplist(nth0, Indices, RowElems, DiagonalList),
-  same_values(DiagonalList),
+  same_values(DiagonalList).
 
-  append(RowElems, X),
-  label(X).
+% Separates out List into variables Head and Tail
+separate_list(List, Head, Tail) :-
+  List = [Head | Tail].
 
-separate_list(Lst, Head, Tail) :-
-  Lst = [Head | Tail].
-
+% Checks if all the elements in the List have the same value
 same_values(List) :-
   List = [First | Tail],
   Tail = [Second | _],
@@ -45,7 +56,7 @@ product(List, Product) :-
 product([Head], Product) :-
   Product #= Head.
 
-% checks a row/col if they're sum or product.
+% Checks if the header is sum or product of all the elements.
 is_sum_or_prod(Elem, Header) :-
-  product(Elem, Header); % added cut to counter backtracking, might run into errors.
+  product(Elem, Header);
   sum(Elem, #=, Header).
